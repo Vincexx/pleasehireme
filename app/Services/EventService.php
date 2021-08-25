@@ -37,7 +37,7 @@ class EventService {
         if($events) {
             return response()->json([
                 'message' => 'Event has been created.'
-            ], 200);
+            ], 201);
         } else {
             return response()->json(['message' => 'Error']);
         }

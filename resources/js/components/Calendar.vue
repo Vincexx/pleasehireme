@@ -9,7 +9,7 @@
                         color="pink"
                         text
                         v-bind="attrs"
-                        @click="snackbar = false"
+                        @click="setSnackbarToFalse"
                     >
                         Close
                     </v-btn>
@@ -24,6 +24,8 @@
                             label="Event Name"
                             clearable
                             v-model="getEvent.name"
+                            :error="errors.name ? true : false"
+                            :error-messages="errors.name"
                         ></v-text-field>
 
                         <v-menu
@@ -42,6 +44,8 @@
                                     readonly
                                     v-bind="attrs"
                                     v-on="on"
+                                    :error="errors.start_date ? true : false"
+                                    :error-messages="errors.start_date"
                                 ></v-text-field>
                             </template>
                             <v-date-picker
@@ -66,6 +70,8 @@
                                     readonly
                                     v-bind="attrs"
                                     v-on="on"
+                                    :error="errors.end_date ? true : false"
+                                    :error-messages="errors.end_date"
                                 ></v-text-field>
                             </template>
                             <v-date-picker
@@ -74,7 +80,9 @@
                             ></v-date-picker>
                         </v-menu>
 
-                        <v-btn color="success">Save</v-btn>
+                        <v-btn color="success" @click="saveEvent(getEvent)"
+                            >Save</v-btn
+                        >
                     </v-col>
 
                     <v-col md="8">
@@ -87,20 +95,23 @@
 </template>
 
 <script>
+// List View of Full Calendar is not working
+// import { Calendar } from '@fullcalendar/core';
+// import listPlugin from '@fullcalendar/list';
+
 import Calendar from "@fullcalendar/vue";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { mapGetters, mapActions } from "vuex";
+import { mapGetters, mapActions, mapState, mapMutations } from "vuex";
 
 export default {
     components: {
         Calendar
     },
-    mounted() {
-        this.$refs.calendar.scrollToTime("08:00");
-    },
     data() {
         return {
+            // plugins: [listPlugin],
+            // initialView: "listWeek",
             calendarOptions: {
                 plugins: [dayGridPlugin, interactionPlugin],
                 initialView: "dayGridMonth",
@@ -109,21 +120,32 @@ export default {
 
             menu: false,
             menu1: false,
-            snackbar: false,
-            text: ""
+            timeout: 2000
         };
     },
     computed: {
-        ...mapGetters("calendar", ["getEvent"])
+        ...mapGetters("calendar", ["getEvent", "getEvents"]),
+        ...mapState("calendar", ["snackbar", "text", "errors"]),
+
+        Event: {
+            get: function() {
+                this.calendarOptions.events = this.getEvents;
+                return this.calendarOptions.events;
+            },
+            set: function(getEvents) {
+                this.calendarOptions.events = getEvents;
+            }
+        }
     },
-
-    methods: {}
-
-    // for (let i in this.events) {
-    //     this.eventsTo.push({
-    //         title: this.events[i].event_name,
-    //         date: this.events[i].end_date
-    //     });
-    // }
+    mounted() {
+        this.calendarOptions.events = this.Event;
+    },
+    created() {
+        this.listEvents();
+    },
+    methods: {
+        ...mapActions("calendar", ["saveEvent", "listEvents"]),
+        ...mapMutations("calendar", ["setSnackbarToFalse"])
+    }
 };
 </script>
